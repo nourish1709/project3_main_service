@@ -21,8 +21,11 @@ public class Account {
     @Column(name = "last_name")
     private String lastName;
 
+    @Column(name = "enabled_notifications")
+    private boolean enabledNotifications;
+
     private int age;
-    private int phone;
+    private String phone;
 
     @Embedded
     private User user;
