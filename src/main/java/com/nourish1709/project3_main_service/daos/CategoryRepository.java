@@ -1,4 +1,4 @@
-package com.nourish1709.project3_main_service.repositories;
+package com.nourish1709.project3_main_service.daos;
 
 import com.nourish1709.project3_main_service.models.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
