@@ -12,5 +12,6 @@ public class AccountDto implements Serializable {
     private int age;
     private String phone;
     private Long userId;
+    private boolean enabledNotifications;
 
 }
