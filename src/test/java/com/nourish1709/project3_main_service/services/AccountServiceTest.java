@@ -53,7 +53,7 @@ class AccountServiceTest {
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         Mockito.when(accountRepository.save(account)).thenReturn(account);
         accountService.setNotifications(1L, false);
-        assertEquals(false, account.isEnabledNotifications());
+        assertFalse(account.isEnabledNotifications());
     }
 
     @Test
