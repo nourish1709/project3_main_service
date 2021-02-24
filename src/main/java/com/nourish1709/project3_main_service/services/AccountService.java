@@ -13,13 +13,7 @@ public class AccountService implements AccountInterface {
     private final AccountRepository accountRepository;
 
     @Override
-    public Account update(Account account) throws
-            AccountNotFoundException,
-            BadCredentialsException,
-            InvalidNameException,
-            InvalidPhoneException,
-            InvalidAgeException,
-            PhoneNumberIsAlreadyTakenException {
+    public Account update(Account account) {
         checkAccount(account);
 
         accountRepository.save(account);
@@ -28,8 +22,7 @@ public class AccountService implements AccountInterface {
     }
 
     @Override
-    public void setNotifications(Long id, boolean enabledNotifications)
-            throws AccountNotFoundException {
+    public void setNotifications(Long id, boolean enabledNotifications) {
         Account account = getById(id);
 
         account.setEnabledNotifications(enabledNotifications);
@@ -38,19 +31,12 @@ public class AccountService implements AccountInterface {
     }
 
     @Override
-    public Account getById(Long id) throws AccountNotFoundException {
+    public Account getById(Long id) {
         return accountRepository.findById(id)
                 .orElseThrow(AccountNotFoundException::new);
     }
 
-    private void checkAccount(Account account)
-            throws InvalidNameException,
-            InvalidAgeException,
-            InvalidPhoneException,
-            BadCredentialsException,
-            PhoneNumberIsAlreadyTakenException,
-            AccountNotFoundException {
-
+    private void checkAccount(Account account) {
         getById(account.getId());
 
         try {
@@ -80,23 +66,21 @@ public class AccountService implements AccountInterface {
         }
     }
 
-    private String checkName(final String name, final String message)
-            throws InvalidNameException {
+    private String checkName(final String name, final String message) {
         String trimmedName = name.trim();
-        if(trimmedName.length() < 2)
+        if (trimmedName.length() < 2)
             throw new InvalidNameException(message + " is too short!");
-        else if(trimmedName.length() > 40)
+        else if (trimmedName.length() > 40)
             throw new InvalidNameException(message + " is too long!");
         return trimmedName;
     }
 
-    private void checkAge(final int age) throws InvalidAgeException {
+    private void checkAge(final int age) {
         if (age < 14 || age > 130)
             throw new InvalidAgeException("Age is not correct!");
     }
 
-    private void checkPhone(final String phone) throws InvalidPhoneException,
-            PhoneNumberIsAlreadyTakenException {
+    private void checkPhone(final String phone) {
         if (accountRepository.findAccountByPhoneIsContaining(phone) == null) {
             throw new PhoneNumberIsAlreadyTakenException("Phone number is already registered in the system!");
         }
