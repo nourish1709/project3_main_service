@@ -1,12 +1,14 @@
 package com.nourish1709.project3_main_service.models;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "categories")
 @Data
+@NoArgsConstructor
 public class Category {
 
     @Id
