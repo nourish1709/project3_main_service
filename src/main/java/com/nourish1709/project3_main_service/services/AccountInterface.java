@@ -1,11 +1,12 @@
 package com.nourish1709.project3_main_service.services;
 
-import com.nourish1709.project3_main_service.models.dto.AccountDto;
+import com.nourish1709.project3_main_service.models.Account;
 
 public interface AccountInterface {
-    AccountDto update(Long id, AccountDto accountDto);
 
-    void setNotifications(Boolean enabledNotifications);
+    Account update(Account account);
 
-    AccountDto getById(Long id);
+    void setNotifications(Long id, boolean enabledNotifications);
+
+    Account getById(Long id);
 }
