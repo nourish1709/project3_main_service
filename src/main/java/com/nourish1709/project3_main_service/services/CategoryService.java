@@ -38,6 +38,8 @@ public class CategoryService implements CrudInterface<Category> {
     public Category update(final Long id, final Category category) {
         category.setId(id);
 
+        getById(category.getId());
+
         return create(category);
     }
 
@@ -48,8 +50,6 @@ public class CategoryService implements CrudInterface<Category> {
     }
 
     private void checkCategory(final Category category) {
-        getById(category.getId());
-
         try {
             String name = checkName(category.getName());
             category.setName(name);
@@ -74,14 +74,6 @@ public class CategoryService implements CrudInterface<Category> {
         }
 
         try {
-            String image = category.getImage();
-            checkImage(image);
-            category.setImage(image);
-        } catch (PropertyValueException | NullPointerException exception) {
-            throw new BadCredentialsException("The image is null!");
-        }
-
-        try {
             Account account = category.getAccount();
             accountService.getById(account.getId());
         } catch (PropertyValueException | NullPointerException exception) {
@@ -93,7 +85,7 @@ public class CategoryService implements CrudInterface<Category> {
         String trimmedName = name.trim();
         if (trimmedName.length() < 2)
             throw new InvalidNameException("Name is too short!");
-        else if (trimmedName.length() > 40)
+        else if (trimmedName.length() > 30)
             throw new InvalidNameException("Name is too long!");
         return trimmedName;
     }
