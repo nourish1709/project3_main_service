@@ -44,8 +44,8 @@ class AccountServiceTest {
     @Test
     void updateSuccessfulTest() {
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        Account expected = accountService.update(account);
-        assertEquals(expected, account);
+        Account actual = accountService.update(1L, account);
+        assertEquals(account, actual);
     }
 
     @Test
@@ -61,7 +61,7 @@ class AccountServiceTest {
         account.setFirstName("");
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(InvalidNameException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 
     @Test
@@ -69,7 +69,7 @@ class AccountServiceTest {
         account.setFirstName("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(InvalidNameException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 
     @Test
@@ -77,7 +77,7 @@ class AccountServiceTest {
         account.setAge(5);
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(InvalidAgeException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 
     @Test
@@ -85,7 +85,7 @@ class AccountServiceTest {
         account.setPhone("");
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(InvalidPhoneException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 
     @Test
@@ -93,7 +93,7 @@ class AccountServiceTest {
         account.setFirstName(null);
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(BadCredentialsException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 
     @Test
@@ -101,7 +101,7 @@ class AccountServiceTest {
         account.setLastName(null);
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(BadCredentialsException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 
     @Test
@@ -109,6 +109,6 @@ class AccountServiceTest {
         account.setPhone(null);
         Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         assertThrows(BadCredentialsException.class,
-                () -> accountService.update(account));
+                () -> accountService.update(1L, account));
     }
 }

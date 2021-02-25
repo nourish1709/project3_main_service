@@ -13,12 +13,13 @@ public class AccountService implements AccountInterface {
     private final AccountRepository accountRepository;
 
     @Override
-    public Account update(Account account) {
+    public Account update(Long id, Account account) {
+        account.setId(id);
         checkAccount(account);
 
         accountRepository.save(account);
 
-        return account;
+        return getById(id);
     }
 
     @Override
