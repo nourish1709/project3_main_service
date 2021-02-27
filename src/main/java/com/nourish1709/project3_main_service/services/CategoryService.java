@@ -1,83 +1,103 @@
 package com.nourish1709.project3_main_service.services;
 
+import com.nourish1709.project3_main_service.daos.AccountRepository;
 import com.nourish1709.project3_main_service.daos.CategoryRepository;
 import com.nourish1709.project3_main_service.exceptions.*;
 import com.nourish1709.project3_main_service.models.Account;
 import com.nourish1709.project3_main_service.models.Category;
+import com.nourish1709.project3_main_service.models.dto.CategoryDto;
 import lombok.AllArgsConstructor;
 import org.hibernate.PropertyValueException;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class CategoryService implements CrudInterface<Category> {
+public class CategoryService implements CrudInterface<CategoryDto> {
     private final CategoryRepository categoryRepository;
-    private final AccountService accountService;
+    private final AccountRepository accountRepository;
+
+    private final ModelMapper modelMapper;
 
     @Override
-    public Category create(final Category category) {
-        checkCategory(category);
+    public CategoryDto create(final CategoryDto categoryDto) {
+        checkCategory(categoryDto);
+
+        Category category = convertToEntity(categoryDto);
+
         categoryRepository.save(category);
-        return getById(category.getId());
-    }
-
-    @Override
-    public List<Category> getAll() {
-        return categoryRepository.findAll();
-    }
-
-    @Override
-    public Category getById(final Long id) {
-        return categoryRepository.findById(id)
+        Category savedCategory = categoryRepository
+                .findById(category.getId())
                 .orElseThrow(CategoryNotFoundException::new);
+
+        return convertToDto(savedCategory);
     }
 
     @Override
-    public Category update(final Long id, final Category category) {
+    public List<CategoryDto> getAll() {
+        List<CategoryDto> categoryDtos = new ArrayList<>();
+        for (Category category : categoryRepository.findAll()) {
+            categoryDtos.add(convertToDto(category));
+        }
+        return categoryDtos;
+    }
+
+    @Override
+    public CategoryDto getById(final Long id) {
+        return categoryRepository.findById(id).
+                map(this::convertToDto)
+                        .orElseThrow(CategoryNotFoundException::new);
+    }
+
+    @Override
+    public CategoryDto update(final Long id, final CategoryDto categoryDto) {
+        Category category = convertToEntity(categoryDto);
         category.setId(id);
 
         getById(category.getId());
+        checkCategory(categoryDto);
 
-        return create(category);
+        categoryRepository.save(category);
+        Category savedCategory = categoryRepository
+                .findById(category.getId())
+                .orElseThrow(CategoryNotFoundException::new);
+
+        return convertToDto(savedCategory);
     }
 
     @Override
     public void delete(final Long id) {
-        Category category = getById(id);
+        CategoryDto categorydto = getById(id);
+        Category category = convertToEntity(categorydto);
+        category.setId(id);
         categoryRepository.delete(category);
     }
 
-    private void checkCategory(final Category category) {
+    private void checkCategory(final CategoryDto categoryDto) {
         try {
-            String name = checkName(category.getName());
-            category.setName(name);
+            String name = checkName(categoryDto.getName());
+            categoryDto.setName(name);
         } catch (PropertyValueException | NullPointerException exception) {
             throw new BadCredentialsException("The name is null!");
         }
 
         try {
-            String description = category.getDescription();
+            String description = categoryDto.getDescription();
             checkDescription(description);
-            category.setDescription(description);
+            categoryDto.setDescription(description);
         } catch (PropertyValueException | NullPointerException exception) {
             throw new BadCredentialsException("The description is null!");
         }
 
         try {
-            String image = category.getImage();
+            String image = categoryDto.getImage();
             checkImage(image);
-            category.setImage(image);
+            categoryDto.setImage(image);
         } catch (PropertyValueException | NullPointerException exception) {
             throw new BadCredentialsException("The image is null!");
-        }
-
-        try {
-            Account account = category.getAccount();
-            accountService.getById(account.getId());
-        } catch (PropertyValueException | NullPointerException exception) {
-            throw new BadCredentialsException("The account is null!");
         }
     }
 
@@ -134,5 +154,25 @@ public class CategoryService implements CrudInterface<Category> {
                 "[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$")) {
             throw new InvalidImageUrlException("The photo url is not correct!");
         }
+    }
+
+    public Category convertToEntity(CategoryDto categoryDto) {
+        Category category = modelMapper.map(categoryDto, Category.class);
+
+        Account account = accountRepository.findById(
+                categoryDto.getAccountId())
+                .orElseThrow(AccountNotFoundException::new);
+
+        category.setAccount(account);
+
+        return category;
+    }
+
+    public CategoryDto convertToDto(Category category) {
+        CategoryDto categoryDto = modelMapper.map(category, CategoryDto.class);
+
+        categoryDto.setAccountId(category.getAccount().getId());
+
+        return categoryDto;
     }
 }
