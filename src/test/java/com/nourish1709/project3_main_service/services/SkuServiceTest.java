@@ -1,11 +1,15 @@
 package com.nourish1709.project3_main_service.services;
 
+import com.nourish1709.project3_main_service.daos.AccountRepository;
+import com.nourish1709.project3_main_service.daos.CategoryRepository;
 import com.nourish1709.project3_main_service.daos.SkuRepository;
 import com.nourish1709.project3_main_service.exceptions.InvalidSkuDataException;
 import com.nourish1709.project3_main_service.exceptions.InvalidSkuIdException;
 import com.nourish1709.project3_main_service.models.Account;
 import com.nourish1709.project3_main_service.models.Category;
 import com.nourish1709.project3_main_service.models.Sku;
+import com.nourish1709.project3_main_service.models.dto.SkuDto;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
+@RequiredArgsConstructor
 class SkuServiceTest {
 
     private SkuService skuService;
@@ -31,54 +38,79 @@ class SkuServiceTest {
     @Mock
     private SkuRepository skuRepository;
 
-    private List<Sku> skus;
+    @Mock
+    private CategoryRepository categoryRepository;
+
+    @Mock
+    private AccountRepository accountRepository;
+
+    private List<SkuDto> skuDtos;
+    private SkuDto skuDto;
     private Sku sku;
 
-    @BeforeAll
+    @BeforeEach
     void setUp() {
-        sku = new Sku();
-        sku.setName("iPhone 12");
-        sku.setPrice(BigDecimal.valueOf(699.99));
-        sku.setDescription("Original iPhone");
-        sku.setAvailability(true);
-        sku.setCategory(new Category());
-        sku.setAccount(new Account());
+        skuDto = new SkuDto();
+        skuDto.setName("iPhone 12");
+        skuDto.setPrice(BigDecimal.valueOf(699.99));
+        skuDto.setDescription("Original iPhone");
+        skuDto.setAvailability(true);
+        skuDto.setCategoryId(1L);
+        skuDto.setAccountId(1L);
 
-        skus = new ArrayList<>();
+        skuDtos = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            skus.add(sku);
+            skuDtos.add(skuDto);
         }
+
+        Category category = new Category();
+        category.setId(1L);
+        Account account = new Account();
+        account.setId(1L);
+
+        Mockito.when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+        Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+
+        sku = skuService.convertToEntity(skuDto);
     }
 
     @BeforeEach
     void configure() {
-        skuService = new SkuService(skuRepository);
+        skuService = new SkuService(
+                skuRepository,
+                categoryRepository,
+                accountRepository,
+                new ModelMapper()
+        );
+//        skuService = new SkuService();
     }
 
     @Test
     void createSkuSuccessTest() {
         Mockito.when(skuRepository.save(sku)).thenReturn(sku);
-        sku.setName("iPhone 12");
-        sku.setPrice(BigDecimal.valueOf(699.99));
-        sku.setDescription("Original iPhone");
-        sku.setAvailability(true);
-        sku.setCategory(new Category());
-        sku.setAccount(new Account());
-        Sku sku = skuService.create(this.sku);
-        assertEquals(this.sku, sku);
+
+        /*skuDto.setName("iPhone 12");
+        skuDto.setPrice(BigDecimal.valueOf(699.99));
+        skuDto.setDescription("Original iPhone");
+        skuDto.setAvailability(true);
+        skuDto.setCategory(new Category());
+        skuDto.setAccount(new Account());*/
+
+        SkuDto skuDto = skuService.create(this.skuDto);
+        assertEquals(this.skuDto, skuDto);
     }
 
     @Test
     void createSkuBlankNameExpectExceptionTest() {
-        Sku skuTest = this.sku;
+        Sku skuTest = this.skuDto;
         skuTest.setName("\t\n\t\t  \n");
         assertThrows(InvalidSkuDataException.class,
                 () -> skuService.create(skuTest));
-    }
+    }final
 
     @Test
     void createSkuLargeNameExpectExceptionTest() {
-        Sku skuTest = this.sku;
+        Sku skuTest = this.skuDto;
         String name = "";
 
         for (int i = 0; i < 50; i++) {
@@ -92,7 +124,7 @@ class SkuServiceTest {
 
     @Test
     void createSkuNegativePriceExpectExceptionTest() {
-        Sku sku = this.sku;
+        Sku sku = this.skuDto;
         sku.setPrice(BigDecimal.valueOf(-1L));
         assertThrows(InvalidSkuDataException.class,
                 () -> skuService.create(sku));
@@ -100,7 +132,7 @@ class SkuServiceTest {
 
     @Test
     void createSkuNoCategoryExpectExceptionTest() {
-        Sku sku = this.sku;
+        Sku sku = this.skuDto;
         sku.setCategory(null);
         assertThrows(InvalidSkuDataException.class,
                 () -> skuService.create(sku));
@@ -108,7 +140,7 @@ class SkuServiceTest {
 
     @Test
     void createSkuNoAccountExpectExceptionTest() {
-        Sku sku = this.sku;
+        Sku sku = this.skuDto;
         sku.setAccount(null);
         assertThrows(InvalidSkuDataException.class,
                 () -> skuService.create(sku));
@@ -116,14 +148,18 @@ class SkuServiceTest {
 
     @Test
     void getAllSuccessTest() {
-        Mockito.when(skuRepository.findAll()).thenReturn(skus);
-        assertEquals(skuService.getAll(), skus);
+        Mockito.when(
+                skuRepository.findAll())
+                .thenReturn(skuDtos);
+        assertEquals(skuService.getAll(), skuDtos);
     }
 
     @Test
     void getByIdSuccessTest() {
-        Mockito.when(skuRepository.findById(1L)).thenReturn(Optional.of(sku));
-        assertEquals(skuService.getById(1L), sku);
+        Mockito.when(skuRepository.findById(1L))
+                .thenReturn(Optional.of(skuDto));
+
+        assertEquals(skuService.getById(1L), skuDto);
     }
 
     @Test
@@ -134,30 +170,31 @@ class SkuServiceTest {
 
     @Test
     void updateSuccessTest() {
-        sku.setName("iPhone 12");
-        sku.setPrice(BigDecimal.valueOf(699.99));
-        sku.setDescription("Original iPhone");
-        sku.setAvailability(true);
-        sku.setCategory(new Category());
-        sku.setAccount(new Account());
+        skuDto.setName("iPhone 12");
+        skuDto.setPrice(BigDecimal.valueOf(699.99));
+        skuDto.setDescription("Original iPhone");
+        skuDto.setAvailability(true);
+        skuDto.setCategory(new Category());
+        skuDto.setAccount(new Account());
 
-        Mockito.when(skuRepository.findById(1L)).thenReturn(Optional.of(sku));
-        Sku sku = skuService.update(1L, this.sku);
-        assertEquals(this.sku, sku);
+        Mockito.when(skuRepository.findById(1L)).thenReturn(Optional.of(skuDto));
+        Sku sku = skuService.update(1L, this.skuDto);
+        assertEquals(this.skuDto, sku);
     }
 
     @Test
     void updateExpectInvalidSkuIdExceptionTest() {
-        sku.setName("iPhone 12");
-        sku.setPrice(BigDecimal.valueOf(699.99));
-        sku.setDescription("Original iPhone");
-        sku.setAvailability(true);
-        sku.setCategory(new Category());
-        sku.setAccount(new Account());
+        skuDto.setName("iPhone 12");
+        skuDto.setPrice(BigDecimal.valueOf(699.99));
+        skuDto.setDescription("Original iPhone");
+        skuDto.setAvailability(true);
+        skuDto.setCategory(new Category());
+        skuDto.setAccount(new Account());
 
-        Mockito.when(skuRepository.findById(-1L)).thenThrow(new InvalidSkuIdException(-1L));
-        assertThrows(InvalidSkuIdException.class,
-                () -> skuService.update(-1L, sku));
+        Mockito.when(skuRepository.findById(-1L))
+                .thenThrow(new InvalidSkuIdException(-1L));
+
+        assertThrows(InvalidSkuIdException.class, () -> skuService.update(-1L, skuDto));
     }
 
     @Test
