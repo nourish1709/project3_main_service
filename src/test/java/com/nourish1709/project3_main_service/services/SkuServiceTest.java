@@ -10,16 +10,15 @@ import com.nourish1709.project3_main_service.models.Category;
 import com.nourish1709.project3_main_service.models.Sku;
 import com.nourish1709.project3_main_service.models.dto.SkuDto;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -32,6 +31,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 @RequiredArgsConstructor
 class SkuServiceTest {
+    ApplicationContext applicationContext =
+            new AnnotationConfigApplicationContext(ModelMapperConfiguration.class);
+
+    ModelMapper modelMapper;
 
     private SkuService skuService;
 
@@ -44,12 +47,21 @@ class SkuServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
-    private List<SkuDto> skuDtos;
     private SkuDto skuDto;
     private Sku sku;
+    private Category category;
+    private Account account;
 
     @BeforeEach
     void setUp() {
+        modelMapper = applicationContext.getBean(ModelMapper.class);
+
+        skuService = new SkuService(
+                skuRepository,
+                categoryRepository,
+                accountRepository,
+                modelMapper);
+
         skuDto = new SkuDto();
         skuDto.setName("iPhone 12");
         skuDto.setPrice(BigDecimal.valueOf(699.99));
@@ -58,106 +70,84 @@ class SkuServiceTest {
         skuDto.setCategoryId(1L);
         skuDto.setAccountId(1L);
 
-        skuDtos = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            skuDtos.add(skuDto);
-        }
-
-        Category category = new Category();
+        category = new Category();
         category.setId(1L);
-        Account account = new Account();
+        account = new Account();
         account.setId(1L);
 
-        Mockito.when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-        Mockito.when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-
-        sku = skuService.convertToEntity(skuDto);
-    }
-
-    @BeforeEach
-    void configure() {
-        skuService = new SkuService(
-                skuRepository,
-                categoryRepository,
-                accountRepository,
-                new ModelMapper()
-        );
-//        skuService = new SkuService();
+        sku = new Sku();
+        sku.setName("iPhone 12");
+        sku.setPrice(BigDecimal.valueOf(699.99));
+        sku.setDescription("Original iPhone");
+        sku.setAvailability(true);
+        sku.setCategory(category);
+        sku.setAccount(account);
     }
 
     @Test
     void createSkuSuccessTest() {
-        Mockito.when(skuRepository.save(sku)).thenReturn(sku);
+        Mockito.when(accountRepository
+                .findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(account));
+        Mockito.when(categoryRepository
+                .findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(category));
 
-        /*skuDto.setName("iPhone 12");
-        skuDto.setPrice(BigDecimal.valueOf(699.99));
-        skuDto.setDescription("Original iPhone");
-        skuDto.setAvailability(true);
-        skuDto.setCategory(new Category());
-        skuDto.setAccount(new Account());*/
+        Mockito.when(skuRepository
+                .save(sku))
+                .thenReturn(sku);
 
-        SkuDto skuDto = skuService.create(this.skuDto);
-        assertEquals(this.skuDto, skuDto);
+        SkuDto savedDkuDto = skuService.create(this.skuDto);
+        assertEquals(skuDto, savedDkuDto);
     }
 
     @Test
     void createSkuBlankNameExpectExceptionTest() {
-        Sku skuTest = this.skuDto;
-        skuTest.setName("\t\n\t\t  \n");
+        skuDto.setName("\t\n\t\t  \n");
         assertThrows(InvalidSkuDataException.class,
-                () -> skuService.create(skuTest));
-    }final
+                () -> skuService.create(skuDto));
+    }
 
     @Test
     void createSkuLargeNameExpectExceptionTest() {
-        Sku skuTest = this.skuDto;
-        String name = "";
-
-        for (int i = 0; i < 50; i++) {
-            name += skuTest.getName();
-        }
-
-        skuTest.setName(name);
+        skuDto.setName("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
         assertThrows(InvalidSkuDataException.class,
-                () -> skuService.create(skuTest));
+                () -> skuService.create(skuDto));
     }
 
     @Test
     void createSkuNegativePriceExpectExceptionTest() {
-        Sku sku = this.skuDto;
-        sku.setPrice(BigDecimal.valueOf(-1L));
+        skuDto.setPrice(BigDecimal.valueOf(-1L));
         assertThrows(InvalidSkuDataException.class,
-                () -> skuService.create(sku));
+                () -> skuService.create(skuDto));
     }
 
     @Test
     void createSkuNoCategoryExpectExceptionTest() {
-        Sku sku = this.skuDto;
-        sku.setCategory(null);
+        skuDto.setCategoryId(null);
         assertThrows(InvalidSkuDataException.class,
-                () -> skuService.create(sku));
+                () -> skuService.create(skuDto));
     }
 
     @Test
     void createSkuNoAccountExpectExceptionTest() {
-        Sku sku = this.skuDto;
-        sku.setAccount(null);
+        skuDto.setAccountId(null);
         assertThrows(InvalidSkuDataException.class,
-                () -> skuService.create(sku));
+                () -> skuService.create(skuDto));
     }
 
     @Test
     void getAllSuccessTest() {
         Mockito.when(
                 skuRepository.findAll())
-                .thenReturn(skuDtos);
-        assertEquals(skuService.getAll(), skuDtos);
+                .thenReturn(List.of(sku));
+        assertEquals(skuService.getAll(), List.of(skuDto));
     }
 
     @Test
     void getByIdSuccessTest() {
         Mockito.when(skuRepository.findById(1L))
-                .thenReturn(Optional.of(skuDto));
+                .thenReturn(Optional.of(sku));
 
         assertEquals(skuService.getById(1L), skuDto);
     }
@@ -170,31 +160,33 @@ class SkuServiceTest {
 
     @Test
     void updateSuccessTest() {
-        skuDto.setName("iPhone 12");
-        skuDto.setPrice(BigDecimal.valueOf(699.99));
-        skuDto.setDescription("Original iPhone");
-        skuDto.setAvailability(true);
-        skuDto.setCategory(new Category());
-        skuDto.setAccount(new Account());
+        Mockito.when(skuRepository
+                .findById(1L))
+                .thenReturn(Optional.of(sku));
+        Mockito.when(accountRepository
+                .findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(account));
+        Mockito.when(categoryRepository
+                .findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(category));
+        Mockito.when(skuRepository
+                .save(sku))
+                .thenReturn(sku);
 
-        Mockito.when(skuRepository.findById(1L)).thenReturn(Optional.of(skuDto));
-        Sku sku = skuService.update(1L, this.skuDto);
-        assertEquals(this.skuDto, sku);
+        SkuDto savedSku = skuService.update(1L, this.skuDto);
+        assertEquals(skuDto, savedSku);
     }
 
     @Test
     void updateExpectInvalidSkuIdExceptionTest() {
-        skuDto.setName("iPhone 12");
-        skuDto.setPrice(BigDecimal.valueOf(699.99));
-        skuDto.setDescription("Original iPhone");
-        skuDto.setAvailability(true);
-        skuDto.setCategory(new Category());
-        skuDto.setAccount(new Account());
-
-        Mockito.when(skuRepository.findById(-1L))
-                .thenThrow(new InvalidSkuIdException(-1L));
-
-        assertThrows(InvalidSkuIdException.class, () -> skuService.update(-1L, skuDto));
+        Mockito.when(categoryRepository
+                .findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(category));
+        Mockito.when(accountRepository
+                .findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(account));
+        assertThrows(InvalidSkuIdException.class,
+                () -> skuService.update(-1L, skuDto));
     }
 
     @Test

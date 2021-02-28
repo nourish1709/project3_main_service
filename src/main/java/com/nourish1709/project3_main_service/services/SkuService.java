@@ -8,13 +8,10 @@ import com.nourish1709.project3_main_service.exceptions.InvalidSkuDataException;
 import com.nourish1709.project3_main_service.models.Account;
 import com.nourish1709.project3_main_service.models.Category;
 import com.nourish1709.project3_main_service.models.Sku;
-import com.nourish1709.project3_main_service.models.dto.AccountDto;
-import com.nourish1709.project3_main_service.models.dto.CategoryDto;
 import com.nourish1709.project3_main_service.models.dto.SkuDto;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,44 +19,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SkuService implements CrudInterface<SkuDto> {
 
     private final SkuRepository skuRepository;
     private final CategoryRepository categoryRepository;
     private final AccountRepository accountRepository;
+
     private final ModelMapper modelMapper;
-
-    public SkuService(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-
-        this.modelMapper.typeMap(
-                Category.class, Long.class)
-                .addMapping(Category::getId,
-                        ((categoryDto, o) -> )
-                );
-
-        this.modelMapper.typeMap(
-                Account.class, AccountDto.class)
-                .addMapping(Account::getId,
-                        (accountDto, o) -> accountDto.set((Long) o)
-                );
-
-        this.modelMapper.typeMap(
-                CategoryDto.class, Category.class)
-                .addMapping(
-                        categoryDto -> this.categoryRepository.findById(categoryDto.getAccountId())
-                                .orElseThrow(new InvalidSkuDataException("No category was found")),
-                        (category, o) -> new Category((Category) o);
-                );
-    }
 
     @Override
     public SkuDto create(SkuDto skuDto) {
+        checkSku(skuDto);
         Sku sku = convertToEntity(skuDto);
-        checkSku(sku);
-        sku = skuRepository.save(sku);
-        return convertToDto(sku);
+
+        return convertToDto(skuRepository.save(sku));
     }
 
     @Override
@@ -80,8 +54,8 @@ public class SkuService implements CrudInterface<SkuDto> {
 
     @Override
     public SkuDto update(Long id, SkuDto skuDto) {
+        checkSku(skuDto);
         Sku sku = convertToEntity(skuDto);
-        checkSku(sku);
 
         Sku skuFromDatabase = skuRepository.findById(id)
                 .orElseThrow(() -> new InvalidSkuIdException(id));
@@ -101,30 +75,30 @@ public class SkuService implements CrudInterface<SkuDto> {
         skuRepository.deleteById(id);
     }
 
-    private void checkSku(Sku sku) {
-        if (sku.getName().isBlank() || sku.getName().length() > 50
-                || sku.getName().length() < 2)
+    private void checkSku(SkuDto skuDto) {
+        if (skuDto.getName().isBlank() || skuDto.getName().length() > 50
+                || skuDto.getName().length() < 2)
             throw new InvalidSkuDataException("Sku's name is invalid");
-        else if (sku.getPrice().compareTo(BigDecimal.valueOf(0)) < 0)
+        else if (skuDto.getPrice().compareTo(BigDecimal.valueOf(0)) < 0)
             throw new InvalidSkuDataException("Sku's price cannot be less then 0");
-        else if (sku.getCategory() == null)
+        else if (skuDto.getCategoryId() == null)
             throw new InvalidSkuDataException("No category was chosen");
-        else if (sku.getAccount() == null)
+        else if (skuDto.getAccountId() == null)
             throw new InvalidSkuDataException("No account was chosen");
     }
 
     public Sku convertToEntity(SkuDto skuDto) {
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         Sku sku = modelMapper.map(skuDto, Sku.class);
 
-        Category category = categoryRepository.findById(
-                skuDto.getCategoryId())
+        Category category = categoryRepository
+                .findById(skuDto.getCategoryId())
                 .orElseThrow(() -> new InvalidSkuDataException("No category by provided id was found"));
-
-        Account account = accountRepository.findById(
-                skuDto.getAccountId())
-                .orElseThrow(() -> new InvalidSkuDataException("No account by provided id was found"));
-
         sku.setCategory(category);
+
+        Account account = accountRepository
+                .findById(skuDto.getAccountId())
+                .orElseThrow(() -> new InvalidSkuDataException("No account by provided id was found"));
         sku.setAccount(account);
 
         return sku;
