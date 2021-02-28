@@ -4,7 +4,7 @@ import com.nourish1709.project3_main_service.models.Account;
 
 public interface AccountInterface {
 
-    Account update(Account account);
+    Account update(Long id, Account account);
 
     void setNotifications(Long id, boolean enabledNotifications);
 
