@@ -13,12 +13,13 @@ public class AccountService implements AccountInterface {
     private final AccountRepository accountRepository;
 
     @Override
-    public Account update(Account account) {
+    public Account update(Long id, Account account) {
+        account.setId(id);
         checkAccount(account);
 
         accountRepository.save(account);
 
-        return account;
+        return getById(id);
     }
 
     @Override
@@ -42,26 +43,22 @@ public class AccountService implements AccountInterface {
         try {
             String fName = checkName(account.getFirstName(), "The first name");
             account.setFirstName(fName);
-        } catch (PropertyValueException exception) {
+        } catch (PropertyValueException | NullPointerException exception) {
             throw new BadCredentialsException("The first name is null!");
         }
 
         try {
             String lName = checkName(account.getLastName(), "The last name");
             account.setLastName(lName);
-        } catch (PropertyValueException exception) {
+        } catch (PropertyValueException | NullPointerException exception) {
             throw new BadCredentialsException("The last name is null!");
         }
 
-        try {
-            checkAge(account.getAge());
-        } catch (PropertyValueException exception) {
-            throw new BadCredentialsException("Age is null!");
-        }
+        checkAge(account.getAge());
 
         try {
             checkPhone(account.getPhone());
-        } catch (PropertyValueException exception) {
+        } catch (PropertyValueException | NullPointerException exception) {
             throw new BadCredentialsException("The phone number is null!");
         }
     }
@@ -81,7 +78,7 @@ public class AccountService implements AccountInterface {
     }
 
     private void checkPhone(final String phone) {
-        if (accountRepository.findAccountByPhoneIsContaining(phone) == null) {
+        if (accountRepository.findAccountByPhoneIsContaining(phone) != null) {
             throw new PhoneNumberIsAlreadyTakenException("Phone number is already registered in the system!");
         }
         String trimmedPhone = phone.trim();
