@@ -156,7 +156,7 @@ public class CategoryService implements CrudInterface<CategoryDto> {
         }
     }
 
-    public Category convertToEntity(CategoryDto categoryDto) {
+    private Category convertToEntity(CategoryDto categoryDto) {
         Category category = modelMapper.map(categoryDto, Category.class);
 
         Account account = accountRepository.findById(
@@ -168,7 +168,7 @@ public class CategoryService implements CrudInterface<CategoryDto> {
         return category;
     }
 
-    public CategoryDto convertToDto(Category category) {
+    private CategoryDto convertToDto(Category category) {
         CategoryDto categoryDto = modelMapper.map(category, CategoryDto.class);
 
         categoryDto.setAccountId(category.getAccount().getId());

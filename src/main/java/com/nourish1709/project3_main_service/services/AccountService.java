@@ -3,28 +3,33 @@ package com.nourish1709.project3_main_service.services;
 import com.nourish1709.project3_main_service.daos.AccountRepository;
 import com.nourish1709.project3_main_service.exceptions.*;
 import com.nourish1709.project3_main_service.models.Account;
+import com.nourish1709.project3_main_service.models.dto.AccountDto;
 import lombok.AllArgsConstructor;
 import org.hibernate.PropertyValueException;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
 public class AccountService implements AccountInterface {
     private final AccountRepository accountRepository;
+    private final ModelMapper modelMapper;
 
     @Override
-    public Account update(Long id, Account account) {
+    public AccountDto update(Long id, AccountDto accountDto) {
+        Account account = convertToEntity(accountDto);
         account.setId(id);
         checkAccount(account);
 
-        accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
 
-        return getById(id);
+        return convertToDto(savedAccount);
     }
 
     @Override
     public void setNotifications(Long id, boolean enabledNotifications) {
-        Account account = getById(id);
+        Account account = accountRepository.findById(id)
+                .orElseThrow(AccountNotFoundException::new);
 
         account.setEnabledNotifications(enabledNotifications);
 
@@ -32,9 +37,10 @@ public class AccountService implements AccountInterface {
     }
 
     @Override
-    public Account getById(Long id) {
-        return accountRepository.findById(id)
+    public AccountDto getById(Long id) {
+        Account account = accountRepository.findById(id)
                 .orElseThrow(AccountNotFoundException::new);
+        return convertToDto(account);
     }
 
     private void checkAccount(Account account) {
@@ -86,5 +92,13 @@ public class AccountService implements AccountInterface {
                 (trimmedPhone.length() < 10 || trimmedPhone.length() > 13)) {
             throw new InvalidPhoneException("Mobile phone number is not correct!");
         }
+    }
+
+    private Account convertToEntity(AccountDto accountDto) {
+        return modelMapper.map(accountDto, Account.class);
+    }
+
+    private AccountDto convertToDto(Account account) {
+        return modelMapper.map(account, AccountDto.class);
     }
 }
