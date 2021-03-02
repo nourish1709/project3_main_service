@@ -28,7 +28,7 @@ public class CategoryService implements CrudInterface<CategoryDto> {
 
         Category category = convertToEntity(categoryDto);
 
-        categoryRepository.save(category);
+        category = categoryRepository.save(category);
         Category savedCategory = categoryRepository
                 .findById(category.getId())
                 .orElseThrow(CategoryNotFoundException::new);
