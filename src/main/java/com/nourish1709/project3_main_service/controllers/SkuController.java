@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/shop/sku/")
 public class SkuController {
 
     private final SkuService service;
@@ -18,7 +17,7 @@ public class SkuController {
         this.service = service;
     }
 
-    @PostMapping("/create")
+    @PostMapping("/position")
     public ResponseEntity<SkuDto> createSku(@RequestBody SkuDto sku) {
         SkuDto newSku = new SkuDto();
         newSku.setName(sku.getName());
@@ -31,12 +30,12 @@ public class SkuController {
         return new ResponseEntity<>(newSku, HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping("/position/")
     public ResponseEntity<List<SkuDto>> getAll() {
         return new ResponseEntity<>(service.getAll(), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/position/{id}")
     public ResponseEntity<SkuDto> findById(@PathVariable Long id) {
         SkuDto sku = service.getById(id);
         if (sku == null) {
@@ -45,7 +44,7 @@ public class SkuController {
         return new ResponseEntity<>(sku, HttpStatus.OK);
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("/position/{id}")
     public ResponseEntity<SkuDto> updateSku(@PathVariable Long id, @RequestBody SkuDto sku) {
         SkuDto newSku = service.getById(id);
         newSku.setName(sku.getName());
@@ -58,7 +57,7 @@ public class SkuController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/position/{id}")
     public ResponseEntity<SkuDto> deleteSku(@PathVariable Long id) {
         SkuDto sku = service.getById(id);
         if (sku == null) {
