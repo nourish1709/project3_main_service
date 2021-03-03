@@ -59,7 +59,7 @@ public class UserService implements UserDetailsService {
                 ),
                 new User(
                         4L,
-                        "zhenya",
+                        "Zhenya",
                         passwordEncoder.encode(SECRET),
                         EMAIL,
                         ADMIN
