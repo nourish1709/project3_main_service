@@ -1,6 +1,7 @@
 package com.nourish1709.project3_main_service.services;
 
 import com.nourish1709.project3_main_service.daos.AccountRepository;
+import com.nourish1709.project3_main_service.daos.UserRepository;
 import com.nourish1709.project3_main_service.exceptions.*;
 import com.nourish1709.project3_main_service.models.Account;
 import com.nourish1709.project3_main_service.models.User;
@@ -35,11 +36,14 @@ class AccountServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @BeforeEach
     void setUp() {
         modelMapper = applicationContext.getBean(ModelMapper.class);
 
-        accountService = new AccountService(accountRepository, modelMapper);
+        accountService = new AccountService(accountRepository, userRepository, modelMapper);
         account = new Account();
         account.setId(1L);
         account.setFirstName("John");

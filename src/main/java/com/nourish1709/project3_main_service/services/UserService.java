@@ -22,6 +22,7 @@ import static com.nourish1709.project3_main_service.security.entity.enums.UserRo
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
+    private final AccountService accountService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private static final String SECRET = "secret";
@@ -74,5 +75,6 @@ public class UserService implements UserDetailsService {
         );
 
         userRepository.saveAll(users);
+        accountService.init();
     }
 }

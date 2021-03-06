@@ -4,6 +4,7 @@ import com.nourish1709.project3_main_service.models.dto.AccountDto;
 import com.nourish1709.project3_main_service.services.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,6 +17,7 @@ public class AccountController {
     }
 
     @PutMapping("/accounts/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<AccountDto> updateAccount(@PathVariable Long id, @RequestBody AccountDto accountDto) {
         AccountDto accountDto1 = new AccountDto();
         accountDto1.setFirstName(accountDto.getFirstName());
@@ -28,6 +30,7 @@ public class AccountController {
     }
 
     @PutMapping("/accounts/notifications/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<AccountDto> setNotification(@PathVariable Long id, @RequestBody boolean notification) {
         AccountDto accountDto = service.getById(id);
         accountDto.setEnabledNotifications(notification);
@@ -36,6 +39,7 @@ public class AccountController {
     }
 
     @GetMapping("/accounts/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<AccountDto> findById(@PathVariable Long id) {
         AccountDto accountDto = service.getById(id);
         if (accountDto == null) {

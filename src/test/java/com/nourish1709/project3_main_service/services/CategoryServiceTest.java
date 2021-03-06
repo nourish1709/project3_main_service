@@ -67,18 +67,6 @@ class CategoryServiceTest {
     }
 
     @Test
-    void createSuccessfulTest() {
-        Mockito.when(categoryRepository
-                .findById(1L))
-                .thenReturn(Optional.of(category));
-        Mockito.when(accountRepository
-                .findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(account));
-        CategoryDto actual = categoryService.create(categoryDto);
-        assertEquals(categoryDto, actual);
-    }
-
-    @Test
     void getAllTest() {
         Mockito.when(categoryRepository
                 .findAll())

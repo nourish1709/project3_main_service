@@ -4,6 +4,7 @@ import com.nourish1709.project3_main_service.models.dto.SkuDto;
 import com.nourish1709.project3_main_service.services.SkuService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class SkuController {
     }
 
     @PostMapping("/position")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<SkuDto> createSku(@RequestBody SkuDto sku) {
         SkuDto newSku = new SkuDto();
         newSku.setName(sku.getName());
@@ -31,11 +33,13 @@ public class SkuController {
     }
 
     @GetMapping("/position/")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<SkuDto>> getAll() {
         return new ResponseEntity<>(service.getAll(), HttpStatus.OK);
     }
 
     @GetMapping("/position/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<SkuDto> findById(@PathVariable Long id) {
         SkuDto sku = service.getById(id);
         if (sku == null) {
@@ -45,6 +49,7 @@ public class SkuController {
     }
 
     @PutMapping("/position/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<SkuDto> updateSku(@PathVariable Long id, @RequestBody SkuDto sku) {
         SkuDto newSku = service.getById(id);
         newSku.setName(sku.getName());
@@ -58,6 +63,7 @@ public class SkuController {
     }
 
     @DeleteMapping("/position/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<SkuDto> deleteSku(@PathVariable Long id) {
         SkuDto sku = service.getById(id);
         if (sku == null) {

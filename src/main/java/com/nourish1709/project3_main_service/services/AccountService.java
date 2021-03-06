@@ -1,19 +1,86 @@
 package com.nourish1709.project3_main_service.services;
 
 import com.nourish1709.project3_main_service.daos.AccountRepository;
+import com.nourish1709.project3_main_service.daos.UserRepository;
 import com.nourish1709.project3_main_service.exceptions.*;
 import com.nourish1709.project3_main_service.models.Account;
 import com.nourish1709.project3_main_service.models.dto.AccountDto;
+import com.nourish1709.project3_main_service.models.User;
 import lombok.AllArgsConstructor;
 import org.hibernate.PropertyValueException;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @AllArgsConstructor
 public class AccountService implements AccountInterface {
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+
+    public void init() {
+        List<User> users = userRepository.findAll().stream()
+                .map(user -> new User(
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getPassword()
+                ))
+                .collect(Collectors.toList());
+
+        List<Account> accounts = Arrays.asList(
+                new Account(
+                        1L,
+                        "Oleg",
+                        "Kandalov",
+                        true,
+                        25,
+                        "380967528946",
+                        users.get(0)
+                ),
+                new Account(
+                        2L,
+                        "Roman",
+                        "Hryhoriev",
+                        true,
+                        25,
+                        "380967528946",
+                        users.get(1)
+                ),
+                new Account(
+                        3L,
+                        "Andriiana",
+                        "Mazan",
+                        true,
+                        20,
+                        "380967528946",
+                        users.get(2)
+                ),
+                new Account(
+                        3L,
+                        "Zhenya",
+                        "Savonenko",
+                        true,
+                        20,
+                        "380967528946",
+                        users.get(3)
+                ),
+                new Account(
+                        4L,
+                        "user",
+                        "",
+                        true,
+                        25,
+                        "380938492045",
+                        users.get(4)
+                )
+        );
+
+        accountRepository.saveAll(accounts);
+    }
 
     @Override
     public AccountDto update(Long id, AccountDto accountDto) {

@@ -1,5 +1,6 @@
 package com.nourish1709.project3_main_service.models;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,6 +9,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "account")
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
 public class Account {
 
